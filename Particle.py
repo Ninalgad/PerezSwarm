@@ -35,6 +35,7 @@ def majic_func(args0):
     eval = []
     for particle in args0:
         h, j, l, m, n, o, q, r, s, t, v, w, C, D, M, N = particle
+        N = 16 * N
         eval_particle = [
             -N - 8 * (D - M + j + o + t) * (-M + h + m + r + w) * (
                     2 * C + 2 * D - 2 * M + j - m + n + o - q + s + t + v + w) * (
@@ -69,6 +70,6 @@ if __name__ == "__main__":
     print(test_func(a))
     print(solve_test1(6, 16,  6))
     print(majic_func(np.array([
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 160000000000000000000000000000000000],
         [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]])))
 

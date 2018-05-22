@@ -1,8 +1,6 @@
 from pyswarms.base.base_discrete import DiscreteSwarmBase
-from pyswarms.discrete import binary
 import numpy as np
 from scipy.spatial import cKDTree
-from random import randint
 
 
 class PerezPSO(DiscreteSwarmBase):
@@ -112,10 +110,14 @@ class PerezPSO(DiscreteSwarmBase):
             # local best positions from it.
             nmin_idx = self._get_neighbors(current_cost)  # get index of loc for each neighborhood of the cur position
             self.best_cost = current_cost[nmin_idx]  # the loc optimum cost for each particle
-            if np.abs(current_cost).min() < self.glo_cost:
-                pos_min_index = np.where(current_cost == current_cost.min())[0][0]  # index of pos min
+
+            cost_abs = np.abs(current_cost)
+            loc_min = cost_abs.min()
+            if loc_min < np.abs(self.glo_cost):
+                pos_min_index = np.where(cost_abs == loc_min)[0][0]  # index of pos min
                 self.glo = self.pos[pos_min_index]
-                self.glo_cost = current_cost.min()
+                self.glo_cost = current_cost[pos_min_index]
+            del loc_min, cost_abs
 
             # Get the local min realative to each point
             self.loc_pos = self.pos[nmin_idx]
@@ -126,22 +128,23 @@ class PerezPSO(DiscreteSwarmBase):
             self._update_position()
 
             care = r"""
+Iter: {}
+glo: {}, {}
 Cur_cost: {}
 loc_pos: {}
 nmin_idx: {}
 y: {}
 velocity: {}
 position: {}
-            """.format(current_cost, self.loc_pos, nmin_idx, self.y, self.velocity, self.pos)
+            """.format(i, self.glo, self.glo_cost, current_cost, self.loc_pos,
+                       nmin_idx, self.y, self.velocity, self.pos)
 
             if i % print_step == 0:
-                print(self.y + self.velocity)
                 print(care + "\n\n")
                 if all_eq(self.pos):
                     break
 
             if self.glo_cost == 0:
-                print(i)
                 break
 
         # Obtain the final best_cost and the final best_position
@@ -218,7 +221,7 @@ position: {}
         :code:`self.optimize()` method.
         """
         del self.pos
-        next_pos = np.random.randint(-1000, 1000, size=self.swarm_size)
+        next_pos = np.random.randint(-2000, 2000, size=self.swarm_size)
         _decision = self.y + self.velocity
         # print("des: {}".format(_decision))
         # mext_pos = np.where(_decision > self.alpha, self.glo, next_pos)
@@ -266,15 +269,18 @@ def all_eq(position):
 
 
 if __name__ == "__main__":
+    record_holder = np.fromstring("-1251  -555 -1024  1119   273 -1101  1728 -1835     3  1968  1375   139  -1051  -547 -1531   298")  # -16047022661760
+    # print(record_holder)
     from Particle import majic_func as obj_func
     from pyswarms.utils.environments import PlotEnvironment
-    test = PerezPSO(10000, 16, 0.3, {"k": 50, 'c1': 0.8, 'c2': 0.2, 'w': 0.75, 'p': 2})
-    test.pos = np.random.randint(-1000, 1000, size=test.swarm_size)
-    test.velocity = np.full(test.n_particles, 0)
+    file = open("best_record.txt", "a")
+    for loop in range(10):
+        test = PerezPSO(12345, 16, 0.3, {"k": 10, 'c1': 0.8, 'c2': 0.2, 'w': 0.75, 'p': 2})
+        test.pos = np.random.randint(-2000, 2000, size=test.swarm_size)
+        test.velocity = np.full(test.n_particles, 0)
+        # test.pos[0] = record_holder
 
-    #plt_env = PlotEnvironment(test, test_func2, 1000)
-    #plt_env.plot_cost(figsize=(-10, 10))
-    #plt_env.plot_particles2D(limits=((-10, 10), (-10, 10)))
-
-    # print(test.pos)
-    print(test.optimize(obj_func, iters=20000, print_step=10))
+        # print(test.pos)
+        proposed = test.optimize(obj_func, iters=200, print_step=50)
+        file.write("{}: {}\n\n".format(proposed[0], proposed[1]))
+    file.close()
